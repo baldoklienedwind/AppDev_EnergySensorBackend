@@ -11,4 +11,5 @@ async def create_reading(db: AsyncSession, voltage: float, current: float, power
 
 async def get_all_readings(db: AsyncSession):
     result = await db.execute(select(EnergyReading))
-    return result.scalars().all()
+    readings = result.scalars().all()
+    return readings

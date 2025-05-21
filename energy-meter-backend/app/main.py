@@ -2,15 +2,16 @@ from fastapi import FastAPI, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
+
 from .database import SessionLocal, engine, Base
 from . import crud
 
 app = FastAPI()
 
 origins = [
-    "http://localhost:5173", 
+    "http://localhost:5173",
     "http://127.0.0.1:5173",
-    "https://appdev-energysensorwebfrontend.onrender.com", 
+    "https://appdev-energysensorwebfrontend.onrender.com",
     "*",
 ]
 
@@ -27,7 +28,7 @@ async def startup():
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
 
-async def get_db():
+async def get_db() -> AsyncSession:
     async with SessionLocal() as session:
         yield session
 
