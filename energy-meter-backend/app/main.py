@@ -31,9 +31,12 @@ readings: List[EnergyReading] = []
 
 @app.get("/api/readings", response_model=List[EnergyReading])
 async def get_readings():
-    voltage = round(random.uniform(110.0, 130.0), 2)
-    current = round(random.uniform(5.0, 15.0), 2)
+    voltage = round(random.uniform(215.0, 225.0), 2)
+
+    current = round(random.uniform(0.2, 0.6), 2)
+
     power = round(voltage * current, 2)
+
     timestamp = datetime.utcnow()
 
     reading = EnergyReading(
@@ -42,5 +45,9 @@ async def get_readings():
         power=power,
         timestamp=timestamp
     )
+
     readings.append(reading)
+    if len(readings) > 50:
+        readings.pop(0)
+
     return readings
