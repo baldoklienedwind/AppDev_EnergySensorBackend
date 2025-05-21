@@ -5,11 +5,14 @@ from .models import EnergyReading
 async def create_reading(db: AsyncSession, voltage: float, current: float, power: float):
     reading = EnergyReading(voltage=voltage, current=current, power=power)
     db.add(reading)
-    await db.commit()
-    await db.refresh(reading)
-    return reading
+    try:
+        await db.commit()
+        await db.refresh(reading)
+        return reading
+    except:
+        await db.rollback()
+        raise
 
 async def get_all_readings(db: AsyncSession):
     result = await db.execute(select(EnergyReading))
-    readings = result.scalars().all()
-    return readings
+    return result.scalars().all()

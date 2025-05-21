@@ -1,14 +1,9 @@
-from fastapi import FastAPI, Depends, HTTPException
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from sqlalchemy.ext.asyncio import AsyncSession
 from pydantic import BaseModel
-import logging
-
-from .database import SessionLocal, engine, Base
-from . import crud
-
-logging.basicConfig(level=logging.INFO)
-logger = logging.getLogger(__name__)
+from typing import List
+from datetime import datetime
+import random
 
 app = FastAPI()
 
@@ -26,36 +21,26 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.on_event("startup")
-async def startup():
-    logger.info("Starting up, creating database tables if not exist...")
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-    logger.info("Startup complete.")
-
-async def get_db() -> AsyncSession:
-    async with SessionLocal() as session:
-        yield session
-
-class ReadingIn(BaseModel):
+class EnergyReading(BaseModel):
     voltage: float
     current: float
     power: float
+    timestamp: datetime
 
-@app.post("/api/readings")
-async def post_reading(reading: ReadingIn, db: AsyncSession = Depends(get_db)):
-    try:
-        created = await crud.create_reading(db, reading.voltage, reading.current, reading.power)
-        return created
-    except Exception as e:
-        logger.error(f"Error creating reading: {e}")
-        raise HTTPException(status_code=500, detail="Failed to create reading")
+readings: List[EnergyReading] = []
 
-@app.get("/api/readings")
-async def get_readings(db: AsyncSession = Depends(get_db)):
-    try:
-        readings = await crud.get_all_readings(db)
-        return readings
-    except Exception as e:
-        logger.error(f"Error fetching readings: {e}")
-        raise HTTPException(status_code=500, detail="Failed to fetch readings")
+@app.get("/api/readings", response_model=List[EnergyReading])
+async def get_readings():
+    voltage = round(random.uniform(110.0, 130.0), 2)
+    current = round(random.uniform(5.0, 15.0), 2)
+    power = round(voltage * current, 2)
+    timestamp = datetime.utcnow()
+
+    reading = EnergyReading(
+        voltage=voltage,
+        current=current,
+        power=power,
+        timestamp=timestamp
+    )
+    readings.append(reading)
+    return readings
