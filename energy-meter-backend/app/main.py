@@ -1,9 +1,13 @@
+import logging
+
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from pydantic import BaseModel
-from typing import List
-from datetime import datetime
-import random
+
+from .database import engine, Base
+from .routes.readings import router as readings_router
+
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 app = FastAPI()
 
@@ -21,33 +25,11 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-class EnergyReading(BaseModel):
-    voltage: float
-    current: float
-    power: float
-    timestamp: datetime
+@app.on_event("startup")
+async def on_startup():
+    logger.info("Creating database tables...")
+    async with engine.begin() as conn:
+        await conn.run_sync(Base.metadata.create_all)
+    logger.info("Database ready.")
 
-readings: List[EnergyReading] = []
-
-@app.get("/api/readings", response_model=List[EnergyReading])
-async def get_readings():
-    voltage = round(random.uniform(215.0, 225.0), 2)
-
-    current = round(random.uniform(0.2, 0.6), 2)
-
-    power = round(voltage * current, 2)
-
-    timestamp = datetime.utcnow()
-
-    reading = EnergyReading(
-        voltage=voltage,
-        current=current,
-        power=power,
-        timestamp=timestamp
-    )
-
-    readings.append(reading)
-    if len(readings) > 50:
-        readings.pop(0)
-
-    return readings
+app.include_router(readings_router)
