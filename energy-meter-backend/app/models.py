@@ -7,6 +7,5 @@ class EnergyReading(Base):
     id = Column(Integer, primary_key=True, index=True)
     voltage = Column(Float)     
     current = Column(Float)
-    power = Column(Float) 
-    energy = Column(Float)
+    power = Column(Float)
     timestamp = Column(DateTime(timezone=True), server_default=func.now())

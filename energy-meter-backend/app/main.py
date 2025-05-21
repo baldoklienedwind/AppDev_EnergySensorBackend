@@ -35,11 +35,10 @@ class ReadingIn(BaseModel):
     voltage: float
     current: float
     power: float
-    energy: float
 
 @app.post("/api/readings")
 async def post_reading(reading: ReadingIn, db: AsyncSession = Depends(get_db)):
-    return await crud.create_reading(db, reading.voltage, reading.current, reading.power, reading.energy)
+    return await crud.create_reading(db, reading.voltage, reading.current, reading.power)
 
 @app.get("/api/readings")
 async def get_readings(db: AsyncSession = Depends(get_db)):
